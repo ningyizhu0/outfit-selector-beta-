@@ -1,0 +1,8 @@
+.DS_Store
+*.zip
+*.jpg
+*.jpeg
+*.png
+.agents/
+.claude/
+agent/
