@@ -99,12 +99,23 @@ function renderClothes() {
   updateCount();
 }
 function escapeHtml(value) { return value.replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[char])); }
+function showOutfitDialog() {
+  $('#outfit-empty').classList.add('hidden');
+  $('#outfit-grid').classList.add('hidden');
+  $('#outfit-dialog').classList.remove('hidden');
+  $('#dialog-close').focus();
+}
+function closeOutfitDialog() {
+  $('#outfit-dialog').classList.add('hidden');
+  $('#outfit-empty').classList.remove('hidden');
+}
 function suggest() {
   const tops = clothes.filter((item) => item.category === 'top');
   const bottoms = clothes.filter((item) => item.category === 'bottom');
-  $('#outfit-empty').classList.toggle('hidden', tops.length > 0 && bottoms.length > 0);
-  $('#outfit-grid').classList.toggle('hidden', !(tops.length > 0 && bottoms.length > 0));
-  if (!tops.length || !bottoms.length) return;
+  if (!tops.length || !bottoms.length) { showOutfitDialog(); return; }
+  $('#outfit-empty').classList.add('hidden');
+  $('#outfit-dialog').classList.add('hidden');
+  $('#outfit-grid').classList.remove('hidden');
   const top = tops[Math.floor(Math.random() * tops.length)];
   const bottom = bottoms[Math.floor(Math.random() * bottoms.length)];
   $('#suggested-top').src = URL.createObjectURL(top.image); $('#suggested-top-name').textContent = top.name;
@@ -152,6 +163,10 @@ $('#clothing-form').addEventListener('submit', async (event) => {
     button.disabled = false;
   }
 });
+$('#dialog-close').addEventListener('click', closeOutfitDialog);
+$('#dialog-add').addEventListener('click', closeOutfitDialog);
+$('#outfit-dialog').addEventListener('click', (event) => { if (event.target === $('#outfit-dialog')) closeOutfitDialog(); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !$('#outfit-dialog').classList.contains('hidden')) closeOutfitDialog(); });
 document.querySelectorAll('.filter').forEach((button) => button.addEventListener('click', () => { activeFilter = button.dataset.filter; document.querySelectorAll('.filter').forEach((item) => item.classList.toggle('active', item === button)); renderClothes(); }));
 $('.site-search input').addEventListener('input', (event) => { searchQuery = event.target.value.trim().toLowerCase(); renderClothes(); });
 window.addEventListener('hashchange', () => showPage(location.hash.slice(1) || 'today'));
