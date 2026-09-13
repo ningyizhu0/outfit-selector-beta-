@@ -1,8 +1,10 @@
 .DS_Store
 *.zip
-*.jpg
-*.jpeg
-*.png
+/*.jpg
+/*.jpeg
+/*.png
+/1/
+/1.zip
 .agents/
 .claude/
 agent/
