@@ -3,6 +3,7 @@ const STORE_NAME = 'clothes';
 let db;
 let clothes = [];
 let activeFilter = 'all';
+let saveInProgress = false;
 let searchQuery = '';
 
 const $ = (selector) => document.querySelector(selector);
@@ -122,7 +123,35 @@ function showPage(name) {
 }
 
 $('#suggest-button').addEventListener('click', suggest);
-$('#clothing-form').addEventListener('submit', async (event) => { event.preventDefault(); const file = $('#image-input').files[0]; if (!file) { $('#form-message').textContent = 'Choose a photo before saving.'; return; } const button = event.target.querySelector('button[type=submit]'); button.disabled = true; $('#form-message').textContent = 'Saving photo...'; try { const image = await toPng(file); await saveClothing({ name: $('#name-input').value.trim() || (document.querySelector('input[name=category]:checked').value === 'top' ? 'Unnamed top' : 'Unnamed bottom'), category: document.querySelector('input[name=category]:checked').value, image, createdAt: new Date().toISOString() }); event.target.reset(); $('#image-preview').classList.add('hidden'); $('.upload-box').classList.remove('has-image'); $('#upload-title').textContent = 'Choose a photo'; $('#form-message').textContent = 'Clothing saved.'; await refresh(); window.location.hash = '#closet'; showPage('closet'); } catch (error) { $('#form-message').textContent = 'Could not save this photo. Please try again.'; } finally { button.disabled = false; } });
+$('#clothing-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (saveInProgress) return;
+  const file = $('#image-input').files[0];
+  if (!file) { $('#form-message').textContent = 'Choose a photo before saving.'; return; }
+  const name = $('#name-input').value.trim();
+  const category = document.querySelector('input[name=category]:checked').value;
+  const button = event.target.querySelector('button[type=submit]');
+  saveInProgress = true;
+  button.disabled = true;
+  $('#form-message').textContent = 'Saving photo...';
+  try {
+    const image = await toPng(file);
+    await saveClothing({ name: name || (category === 'top' ? 'Unnamed top' : 'Unnamed bottom'), category, image, createdAt: new Date().toISOString() });
+    event.target.reset();
+    $('#image-preview').classList.add('hidden');
+    $('.upload-box').classList.remove('has-image');
+    $('#upload-title').textContent = 'Choose a photo';
+    $('#form-message').textContent = 'Clothing saved.';
+    await refresh();
+    window.location.hash = '#closet';
+    showPage('closet');
+  } catch (error) {
+    $('#form-message').textContent = 'Could not save this photo. Please try again.';
+  } finally {
+    saveInProgress = false;
+    button.disabled = false;
+  }
+});
 document.querySelectorAll('.filter').forEach((button) => button.addEventListener('click', () => { activeFilter = button.dataset.filter; document.querySelectorAll('.filter').forEach((item) => item.classList.toggle('active', item === button)); renderClothes(); }));
 $('.site-search input').addEventListener('input', (event) => { searchQuery = event.target.value.trim().toLowerCase(); renderClothes(); });
 window.addEventListener('hashchange', () => showPage(location.hash.slice(1) || 'today'));
